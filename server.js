@@ -388,7 +388,7 @@ app.get('/mobile', async (req, res) => {
   }
 });
 
-// 4. TELEGRAM OSINT API (FIXED)
+// 4. TELEGRAM OSINT API (FIXED - No Duplicate Data)
 app.get('/tg', async (req, res) => {
   const { query } = req.query;
   
@@ -443,7 +443,7 @@ app.get('/tg', async (req, res) => {
 
     const apiData = response.data;
     
-    // ✅ FIX: Extract data and rate info separately
+    // ✅ FIX: Sirf useful data lo, rate info alag
     const result = {
       success: true,
       data: {
@@ -452,6 +452,7 @@ app.get('/tg', async (req, res) => {
         country: apiData.data?.country || apiData.country || 'N/A',
         country_code: apiData.data?.country_code || apiData.country_code || 'N/A',
         number: apiData.data?.number || apiData.number || 'N/A'
+        // ❌ Yahan req_left, expiry, developer MAT lo
       },
       rate_info: {
         req_left: apiData.data?.req_left || apiData.req_left || rateCheck.remaining,

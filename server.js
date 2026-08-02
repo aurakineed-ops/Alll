@@ -21,7 +21,7 @@ const RATE_LIMITS = {
   tg: parseInt(process.env.TG_LIMIT) || 1000
 };
 
-// ============ REDIS SETUP (Optional - falls back to memory) ============
+// ============ REDIS SETUP ============
 let redis = null;
 try {
   const { Redis } = require('@upstash/redis');
@@ -291,7 +291,7 @@ app.get('/vehicle', async (req, res) => {
   }
 });
 
-// 3. MOBILE API (NEW)
+// 3. MOBILE API
 app.get('/mobile', async (req, res) => {
   const { vehicle } = req.query;
   
@@ -388,7 +388,7 @@ app.get('/mobile', async (req, res) => {
   }
 });
 
-// 4. TELEGRAM OSINT API
+// 4. TELEGRAM OSINT API (FIXED)
 app.get('/tg', async (req, res) => {
   const { query } = req.query;
   
@@ -442,16 +442,24 @@ app.get('/tg', async (req, res) => {
     const responseTime = `${Date.now() - startTime}ms`;
 
     const apiData = response.data;
+    
+    // ✅ FIX: Extract data and rate info separately
     const result = {
       success: true,
-      data: apiData.data || apiData,
+      data: {
+        msg: apiData.data?.msg || apiData.msg || 'Details fetched',
+        tg_id: apiData.data?.tg_id || apiData.tg_id || query,
+        country: apiData.data?.country || apiData.country || 'N/A',
+        country_code: apiData.data?.country_code || apiData.country_code || 'N/A',
+        number: apiData.data?.number || apiData.number || 'N/A'
+      },
       rate_info: {
-        req_left: apiData.req_left || rateCheck.remaining,
-        req_total: apiData.req_total || rateCheck.total,
-        expiry: apiData.expiry || API_EXPIRY,
-        developer: apiData.developer || DEVELOPER,
+        req_left: apiData.data?.req_left || apiData.req_left || rateCheck.remaining,
+        req_total: apiData.data?.req_total || apiData.req_total || rateCheck.total,
+        expiry: apiData.data?.expiry || apiData.expiry || API_EXPIRY,
+        developer: DEVELOPER,  // ✅ Force @sahilxalone
         cached: false,
-        response_time: apiData.response_time || responseTime
+        response_time: apiData.data?.response_time || apiData.response_time || responseTime
       },
       your_rate_remaining: rateCheck.remaining,
       api_expiry: API_EXPIRY,
@@ -641,8 +649,8 @@ if (require.main === module) {
     console.log(`\n📌 Endpoints:`);
     console.log(`  GET  /search?q=9876543210`);
     console.log(`  GET  /vehicle?vehicle=KL41V3504`);
-    console.log(`  GET  /mobile?vehicle=KL41V3504  (NEW)`);
-    console.log(`  GET  /tg?query=123456789`);
+    console.log(`  GET  /mobile?vehicle=KL41V3504`);
+    console.log(`  GET  /tg?query=123456789  (FIXED)`);
     console.log(`  GET  /rates`);
     console.log(`\n⚡ Rate Limits: Search:5k | Vehicle:5k | Mobile:5k | TG:1k`);
     console.log(`💾 Cache: ${redis ? 'Redis' : 'Memory'}`);

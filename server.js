@@ -388,7 +388,7 @@ app.get('/mobile', async (req, res) => {
   }
 });
 
-// 4. TELEGRAM OSINT API (FIXED - No Duplicate Data)
+// 4. TELEGRAM OSINT API (FINAL FIX - NO DUPLICATE)
 app.get('/tg', async (req, res) => {
   const { query } = req.query;
   
@@ -443,25 +443,28 @@ app.get('/tg', async (req, res) => {
 
     const apiData = response.data;
     
-    // ✅ FIX: Sirf useful data lo, rate info alag
+    // ✅ FINAL FIX: Sirf required data lo, baaki sab ignore
+    const cleanData = {
+      msg: apiData.msg || apiData.data?.msg || 'Details fetched',
+      tg_id: apiData.tg_id || apiData.data?.tg_id || query,
+      country: apiData.country || apiData.data?.country || 'N/A',
+      country_code: apiData.country_code || apiData.data?.country_code || 'N/A',
+      number: apiData.number || apiData.data?.number || 'N/A'
+    };
+
+    const rateInfo = {
+      req_left: apiData.req_left || apiData.data?.req_left || rateCheck.remaining,
+      req_total: apiData.req_total || apiData.data?.req_total || rateCheck.total,
+      expiry: apiData.expiry || apiData.data?.expiry || API_EXPIRY,
+      developer: DEVELOPER,
+      cached: false,
+      response_time: apiData.response_time || apiData.data?.response_time || responseTime
+    };
+
     const result = {
       success: true,
-      data: {
-        msg: apiData.data?.msg || apiData.msg || 'Details fetched',
-        tg_id: apiData.data?.tg_id || apiData.tg_id || query,
-        country: apiData.data?.country || apiData.country || 'N/A',
-        country_code: apiData.data?.country_code || apiData.country_code || 'N/A',
-        number: apiData.data?.number || apiData.number || 'N/A'
-        // ❌ Yahan req_left, expiry, developer MAT lo
-      },
-      rate_info: {
-        req_left: apiData.data?.req_left || apiData.req_left || rateCheck.remaining,
-        req_total: apiData.data?.req_total || apiData.req_total || rateCheck.total,
-        expiry: apiData.data?.expiry || apiData.expiry || API_EXPIRY,
-        developer: DEVELOPER,  // ✅ Force @sahilxalone
-        cached: false,
-        response_time: apiData.data?.response_time || apiData.response_time || responseTime
-      },
+      data: cleanData,
+      rate_info: rateInfo,
       your_rate_remaining: rateCheck.remaining,
       api_expiry: API_EXPIRY,
       timestamp: new Date().toISOString()

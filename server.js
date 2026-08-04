@@ -433,7 +433,7 @@ app.get('/tg', async (req, res) => {
     const response = await axios.get('https://rootx-osint.in/', {
       params: {
         type: 'tg_num',
-        key: 'm3tary',
+        key: 'sahil_X',
         query: query
       },
       timeout: 15000,
